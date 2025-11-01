@@ -31,6 +31,18 @@ eval_seeds = f'scripts/eval_seeds.py'
 os.makedirs(exps_path, exist_ok=True)
 
 def _suggest_mlp_layers(trial):
+    """
+    为给定的试验（trial）生成 MLP（多层感知机）的层配置建议。
+
+    Args:
+        trial: 一个试验对象，用于生成超参数建议。
+
+    Returns:
+        list: 包含各层维度（2的幂次方）的列表，表示 MLP 的层配置。
+
+    Raises:
+        ValueError: 如果生成的层数或维度不符合预期范围。
+    """
     def suggest_dim(name):
         t = trial.suggest_int(name, d_min, d_max)
         return 2 ** t
@@ -47,7 +59,17 @@ def _suggest_mlp_layers(trial):
     return d_layers
 
 def objective(trial):
-    
+    """ 使用 Optuna 框架进行超参数优化的目标函数。
+
+    Args: 
+        trial (optuna.Trial): Optuna 提供的 Trial 对象，用于超参数采样和优化。
+
+    Returns: 
+        float: 多个数据集上的平均评分（R2 或 F1-score）。
+
+    Raises: subprocess.CalledProcessError: 如果子进程执行失败。 FileNotFoundError: 如果配置文件或结果文件不存在。
+
+    Notes: - 该函数通过修改基础配置并运行训练和评估流程来优化超参数。 - 每次试验会生成一个独立的实验目录，并在完成后清理。 - 支持多种评估指标（R2 或 F1-score），具体取决于数据集和模型类型。 """
     lr = trial.suggest_loguniform('lr', 0.00001, 0.003)
     d_layers = _suggest_mlp_layers(trial)
     weight_decay = 0.0    
